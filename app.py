@@ -2,10 +2,30 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objects as go
+import json
+import os
+
+
+# Função para carregar dados do arquivo JSON
+def load_data():
+    if os.path.exists("dados.json"):
+        with open("dados.json", "r") as f:
+            return json.load(f)
+    return {"decisions": []}
+
+
+# Função para salvar dados no arquivo JSON
+def save_data(data):
+    with open("dados.json", "w") as f:
+        json.dump(data, f)
+
+
+# Carrega os dados ao iniciar o aplicativo
+data = load_data()
 
 # Configuração inicial
 if "decisions" not in st.session_state:
-    st.session_state.decisions = []
+    st.session_state.decisions = data["decisions"]
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "current_user" not in st.session_state:
@@ -74,6 +94,7 @@ def criar_votacao():
             "votos": [],
         }
         st.session_state.decisions.append(nova_decisao)
+        save_data({"decisions": st.session_state.decisions})
         save_to_csv()
         st.success("Votação criada com sucesso!")
         st.session_state.current_page = "home"
@@ -154,6 +175,7 @@ def votar():
                 "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             }
             decisao["votos"].append(novo_voto)
+            save_data({"decisions": st.session_state.decisions})
             save_to_csv()
             st.success("Voto registrado com sucesso!")
 
